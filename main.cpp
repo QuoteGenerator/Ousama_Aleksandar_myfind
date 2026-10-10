@@ -75,6 +75,7 @@ void writeIntoPipe(int fileDescriptor, const std::vector<std::string>& foundPath
         exit(EXIT_FAILURE);
     }
 
+    //schreibt in die pipe
     if(foundFilenames.empty() || foundPaths.empty()){
         std::fprintf(writing, "%d: File not found\n", (int)getpid());
         std::fflush(writing);
@@ -84,9 +85,9 @@ void writeIntoPipe(int fileDescriptor, const std::vector<std::string>& foundPath
 
     for(size_t i = 0; i < foundFilenames.size(); ++i){
         std::fprintf(writing, "%d: %s: %s\n", (int)getpid(), foundFilenames[i].c_str(), foundPaths[i].c_str());
-        std::fflush(writing);
+        std::fflush(writing); //flushed den buffer
     }
-    fclose(writing);
+    fclose(writing);//schließt file descriptor vom Kind
 }
 
 int main(int argc, char *argv[]){
@@ -94,7 +95,7 @@ int main(int argc, char *argv[]){
     std::vector<std::string> foundPaths;
     std::vector<std::string> foundFileNames;
     int opt; 
-    bool caseInsensitive = false, recursiveOption = false; //!!!Unübersichtlich, wenn seitlich (bei wichtigen daten lieben nicht lg aleks)!
+    bool caseInsensitive = false, recursiveOption = false; 
     bool optionR = false, optionI = false, error = false;
     while((opt = getopt(argc, argv, "iR")) != -1){
         switch (opt)
@@ -126,6 +127,7 @@ int main(int argc, char *argv[]){
         printUsage(argv[0]);
     }
 
+    //argc muss größer sein als optind, ansonsten fehlen arguments
     if(argc <= optind + 1){
         printUsage(argv[0]);
     }
@@ -137,10 +139,11 @@ int main(int argc, char *argv[]){
     std::string inputFilename; // Wird in der for schleife zugewiesen (direkt darunter)
 
     if (!std::filesystem::exists(searchDir) || !std::filesystem::is_directory(searchDir)) {
-        std::cerr << "Invalid search directory: " << searchDir << '\n';
+        std::cerr << "Ordner ist nicht zu finden: " << searchDir << '\n';
         return EXIT_FAILURE;
     }
 
+    //pipe wird geöffnet
     if(pipe(fileDescriptor) < 0){
         std::cerr <<"pipe\n";
         return EXIT_FAILURE;
@@ -150,9 +153,9 @@ int main(int argc, char *argv[]){
     for (int i = optind+1; i < argc; i++){
         pid_t PID = fork();
         
-        if (PID == -1)
-        {
+        if (PID == -1){
             std::cerr << "Ein Fehler ist aufgetreten, beim erstellen eines Kindprozesses!";
+            //warten auf davor erstellte child processes
             pid_t result;
             while ((result = waitpid(-1, nullptr, 0)) > 0) {
                 //wait for children, should be empty
@@ -163,9 +166,8 @@ int main(int argc, char *argv[]){
             }
             return EXIT_FAILURE;
         } 
-        else if (PID == 0)
-        {
-            close(fileDescriptor[0]);
+        else if (PID == 0){
+            close(fileDescriptor[0]); //Kinder brauchen lesen nicht
             inputFilename = argv[i];
             pathSearcher(searchDir, inputFilename, foundPaths, foundFileNames, caseInsensitive, recursiveOption);
             writeIntoPipe(fileDescriptor[1], foundPaths, foundFileNames);
@@ -173,7 +175,7 @@ int main(int argc, char *argv[]){
         }
     }
     
-    close(fileDescriptor[1]);
+    close(fileDescriptor[1]);// Parent braucht schreiben nicht
 
     if((reading = fdopen(fileDescriptor[0], "r")) == NULL){
         std::cerr << "Konnte nicht lesen\n";
@@ -185,8 +187,9 @@ int main(int argc, char *argv[]){
         fflush(stdout);
     }
 
-    fclose(reading);
+    fclose(reading);// schließt file descriptor
 
+    //wartet auf alle Kinder
     pid_t result;
     while ((result = waitpid(-1, nullptr, 0)) > 0) {
         //wait for children, should be empty
