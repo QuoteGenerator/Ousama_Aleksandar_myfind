@@ -34,7 +34,7 @@ void pathSearcher(char *searchPath, const std::string& inputFilename, std::vecto
             if(caseInsensitive == true){
                 if(strncasecmp(searchedFilename.c_str(), inputFilename.c_str(), inputFilename.length()) == 0){
                     foundFileNames.emplace_back(searchedFilename);
-                    foundPaths.emplace_back(std::filesystem::absolute(entry));
+                    foundPaths.emplace_back(std::filesystem::absolute(entry.path()).string());
                 }
             }
             else if (searchedFilename == inputFilename){
@@ -58,11 +58,11 @@ void pathSearcher(char *searchPath, const std::string& inputFilename, std::vecto
             if(caseInsensitive == true){                
                 if(strncasecmp(searchedFilename.c_str(), inputFilename.c_str(), inputFilename.length()) == 0){
                     foundFileNames.emplace_back(searchedFilename);
-                    foundPaths.emplace_back(std::filesystem::absolute(entry));
+                    foundPaths.emplace_back(std::filesystem::absolute(entry.path()).string());
                 }
             } else if (searchedFilename == inputFilename){
                 foundFileNames.emplace_back(searchedFilename);
-                foundPaths.emplace_back(std::filesystem::absolute(entry));
+                foundPaths.emplace_back(std::filesystem::absolute(entry.path()).string());
             }   
         }
     }
