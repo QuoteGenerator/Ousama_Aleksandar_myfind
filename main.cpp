@@ -90,23 +90,27 @@ int main(int argc, char *argv[]){
         
         if (PID == -1)
         {
-            break; //Fehler beim erzeugen des Kindprozesses
-            
-        } else if (PID == 0)
+            std::cout << "Ein Fehler ist aufgetreten, beim erstellen eines Kindprozesses!";
+            continue;
+        } 
+        else if (PID == 0)
         {
             inputFilename = argv[i];
             pathSearcher(searchDir, inputFilename, foundPaths, foundFileNames, caseInsensitve, recursiveOption);
-        } else
-        {
-            _exit(0); // Thread safe
-        }
+            
+            std::string output;
+            for(std::size_t i = 0; i < foundFileNames.size(); ++i){
+                output += foundFileNames[i] + ": " + foundPaths[i] + '\n';
+            }
+            
+            std::cout << output;
+            std::cout.flush();
+            
+            _exit(0); // Thread safe ist _exit(...);
+        } 
     }
     while (waitpid(-1, nullptr, 0) > 0) {
         
-    }
-    
-    for(std::size_t i = 0; i < foundFileNames.size(); ++i){
-        std::cout << foundFileNames[i]<< ": " << foundPaths[i] <<'\n';
     }
 }
 
