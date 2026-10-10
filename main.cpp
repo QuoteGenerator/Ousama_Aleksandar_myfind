@@ -71,7 +71,7 @@ void pathSearcher(char *searchPath, const std::string& inputFilename, std::vecto
 void writeIntoPipe(int fileDescriptor, const std::vector<std::string>& foundPaths, const std::vector<std::string>& foundFilenames){
     FILE* writing;
     if((writing = fdopen(fileDescriptor, "w")) == NULL){
-        std::cerr << "Konnte nicht schreiben\n";
+        std::cerr << "Failed to write\n";
         exit(EXIT_FAILURE);
     }
 
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]){
     std::string inputFilename; // Wird in der for schleife zugewiesen (direkt darunter)
 
     if (!std::filesystem::exists(searchDir) || !std::filesystem::is_directory(searchDir)) {
-        std::cerr << "Ordner ist nicht zu finden: " << searchDir << '\n';
+        std::cerr << "Directory not found: " << searchDir << '\n';
         return EXIT_FAILURE;
     }
 
@@ -154,7 +154,7 @@ int main(int argc, char *argv[]){
         pid_t PID = fork();
         
         if (PID == -1){
-            std::cerr << "Ein Fehler ist aufgetreten, beim erstellen eines Kindprozesses!";
+            std::cerr << "Failure in creating a child process!";
             //warten auf davor erstellte child processes
             pid_t result;
             while ((result = waitpid(-1, nullptr, 0)) > 0) {
@@ -178,7 +178,7 @@ int main(int argc, char *argv[]){
     close(fileDescriptor[1]);// Parent braucht schreiben nicht
 
     if((reading = fdopen(fileDescriptor[0], "r")) == NULL){
-        std::cerr << "Konnte nicht lesen\n";
+        std::cerr << "Failed to read\n";
         return EXIT_FAILURE;
     }
 
