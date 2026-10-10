@@ -12,11 +12,6 @@
 #include <cstdlib>
 #include <cerrno>
 
-void printUsage(char* programName){
-    std::cerr << "Usage: " << programName << " [-R] [-i] searchpath filename1 [filename2] ...[filenameN]";
-    exit(EXIT_FAILURE);
-}
-
 
 void pathSearcher(char *searchPath, const std::string& inputFilename, std::vector<std::string>& foundPaths, std::vector<std::string>& foundFileNames, bool caseInsensitive, bool recursiveOption){
     if(recursiveOption == true){
@@ -72,7 +67,7 @@ void writeIntoPipe(int fileDescriptor, const std::vector<std::string>& foundPath
     FILE* writing;
     if((writing = fdopen(fileDescriptor, "w")) == NULL){
         std::cerr << "Failed to write\n";
-        exit(EXIT_FAILURE);
+        _exit(EXIT_FAILURE); // EXIT FAILURE ist einfach 1
     }
 
     //schreibt in die pipe
@@ -96,42 +91,22 @@ int main(int argc, char *argv[]){
     std::vector<std::string> foundFileNames;
     int opt; 
     bool caseInsensitive = false, recursiveOption = false; 
-    bool optionR = false, optionI = false, error = false;
+
     while((opt = getopt(argc, argv, "iR")) != -1){
         switch (opt)
         {
             case 'i':
-                if(optionI){
-                    error = true;
-                    break;
-                }
                 caseInsensitive = true;
-                optionI = true;
                 break;
             case 'R':
-                if(optionR){
-                    error = true;
-                    break;
-                }
                 recursiveOption = true;
-                optionR = true;
                 break;
             
             default: 
-                error = true;
                 break;
         }
     }
-
-    if(error){
-        printUsage(argv[0]);
-    }
-
-    //argc muss größer sein als optind, ansonsten fehlen arguments
-    if(argc <= optind + 1){
-        printUsage(argv[0]);
-    }
-
+    
     int fileDescriptor[2];
     char buffer[PIPE_BUF];
     FILE* reading;
@@ -139,8 +114,8 @@ int main(int argc, char *argv[]){
     std::string inputFilename; // Wird in der for schleife zugewiesen (direkt darunter)
 
     if (!std::filesystem::exists(searchDir) || !std::filesystem::is_directory(searchDir)) {
-        std::cerr << "Directory not found: " << searchDir << '\n';
-        return EXIT_FAILURE;
+        std::cerr << "Directory not found: " << searchDir << "\n";
+        return EXIT_FAILURE; 
     }
 
     //pipe wird geöffnet
@@ -158,12 +133,9 @@ int main(int argc, char *argv[]){
             //warten auf davor erstellte child processes
             pid_t result;
             while ((result = waitpid(-1, nullptr, 0)) > 0) {
-                //wait for children, should be empty
+                // auf kinder warten, muss leer sein
             }
-
-            if(result == -1 && errno != ECHILD){
-                std::cerr << "waitpid\n";
-            }
+            
             return EXIT_FAILURE;
         } 
         else if (PID == 0){
@@ -171,11 +143,11 @@ int main(int argc, char *argv[]){
             inputFilename = argv[i];
             pathSearcher(searchDir, inputFilename, foundPaths, foundFileNames, caseInsensitive, recursiveOption);
             writeIntoPipe(fileDescriptor[1], foundPaths, foundFileNames);
-            return EXIT_SUCCESS;
+            return EXIT_SUCCESS; //EXIT SUCCESS ist einfach 0
         }
     }
     
-    close(fileDescriptor[1]);// Parent braucht schreiben nicht
+    close(fileDescriptor[1]);// Parent braucht nicht schreiben 
 
     if((reading = fdopen(fileDescriptor[0], "r")) == NULL){
         std::cerr << "Failed to read\n";
@@ -192,12 +164,7 @@ int main(int argc, char *argv[]){
     //wartet auf alle Kinder
     pid_t result;
     while ((result = waitpid(-1, nullptr, 0)) > 0) {
-        //wait for children, should be empty
-    }
-
-    if(result == -1 && errno != ECHILD){
-        std::cerr << "waitpid\n";
-        return EXIT_FAILURE;
+        //auf kinder warten, muss leer sein
     }
 }
 
