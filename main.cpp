@@ -85,6 +85,13 @@ void writeIntoPipe(int fileDescriptor, const std::vector<std::string>& foundPath
     fclose(writing);//schließt file descriptor vom Kind
 }
 
+
+/* 
+    -   Für jeden Dateinamen erstellt der Hauptprozess mithilfe von fork() einen Kindprozess.
+    -   Jeder Kindprozess sucht nach der Datei und schreibt seine Ergebnisse in eine Pipe. 
+    -   Das Elternprozess liest aus der Pipe und gibt diese aus (die Ergebnisse).
+*/
+
 int main(int argc, char *argv[]){
 
     std::vector<std::string> foundPaths;
