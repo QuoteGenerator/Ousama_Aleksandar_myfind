@@ -22,13 +22,13 @@ void pathSearcher(char *searchPath, const std::string& inputFilename, std::vecto
             if(caseInsensitve == true){
                 if(strncasecmp(searchedFilename.c_str(), inputFilename.c_str(), inputFilename.length()) == 0){
                     foundFileNames.emplace_back(searchedFilename);
-                    foundPaths.emplace_back(std::filesystem::absolute(entry));
+                    foundPaths.emplace_back(std::filesystem::absolute(entry.path()).string());
                 }
             }
             else if (inputFilename == searchedFilename){
                 {
                     foundFileNames.emplace_back(searchedFilename);
-                    foundPaths.emplace_back(std::filesystem::absolute(entry));
+                    foundPaths.emplace_back(std::filesystem::absolute(entry.path()).string());
                 }
             } 
         }
@@ -48,11 +48,11 @@ void pathSearcher(char *searchPath, const std::string& inputFilename, std::vecto
             if(caseInsensitve == true){                
                 if(strncasecmp(searchedFilename.c_str(), inputFilename.c_str(), inputFilename.length()) == 0){
                     foundFileNames.emplace_back(searchedFilename);
-                    foundPaths.emplace_back(std::filesystem::absolute(entry));
+                    foundPaths.emplace_back(std::filesystem::absolute(entry.path()).string());
                 }
             } else if (inputFilename == searchedFilename){
                 foundFileNames.emplace_back(searchedFilename);
-                foundPaths.emplace_back(std::filesystem::absolute(entry));
+                foundPaths.emplace_back(std::filesystem::absolute(entry.path()).string());
             }   
         }
     }
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]){
             
             std::string output;
             for(std::size_t i = 0; i < foundFileNames.size(); ++i){
-                output += foundFileNames[i] + ": " + foundPaths[i] + '\n';
+                output += std::to_string(getpid()) + ": " + foundFileNames[i] + ": " + foundPaths[i] + '\n';
             }
             
             std::cout << output;
